@@ -1,11 +1,14 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 // Literally Garbage To Me!
 public class Grabbing : MonoBehaviour {
+	private Controls _controls;
+
 	[Header("General")]
 	public Transform grabbingPoint;
 	public LayerMask layerMask;
-	public KeyCode grabKey;
+	private bool _grabbing = false;
 	private Transform _playerTransform;
 	
 	[Header("Values")]
@@ -25,6 +28,11 @@ public class Grabbing : MonoBehaviour {
 	private GameObject fixedGrabbingPointGameObject;
 	private Vector3 localGrabbingPoint;
 
+	private void Awake() {
+		_controls = new Controls();
+		_controls.Player.Interact.performed += (InputAction.CallbackContext context) => _grabbing = true;
+	}
+
 	private void Start() {
 		_playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
 
@@ -40,7 +48,8 @@ public class Grabbing : MonoBehaviour {
 		RaycastHit hit;
 		Transform origin = Camera.main.transform;
 
-		if (Input.GetKeyDown(grabKey)) {
+		// FIXME: Doesn't work
+		if (_grabbing) {
 			// Dropping held object
 			if (_grabbedObject) {
 				_grabbedObject.GetComponent<Rigidbody>().useGravity = true;

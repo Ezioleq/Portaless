@@ -1,12 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class Health : MonoBehaviour {
+	private Controls _controls;
+
 	public int maxHealth = 100;
 	public int regenRate = 5;
 	public float minTimeAfterHit = 5;
-	public KeyCode emergencySuicideKey = KeyCode.R;
 	public float timeToRespawn = 2f;
 
 	[SerializeField]
@@ -22,6 +24,11 @@ public class Health : MonoBehaviour {
 	
 	private Transform playerTransform;
 
+	private void Awake() {
+		_controls = new Controls();
+		_controls.Player.Suicide.performed += SuicideCallback;
+	}
+
 	private void Start() {
 		health = maxHealth;
 		cameraObject = Camera.main.gameObject;
@@ -36,13 +43,10 @@ public class Health : MonoBehaviour {
 		if (GetHealth() < maxHealth)
 			lastHitTimer += Time.deltaTime;
 
-		if (Input.GetKeyDown(emergencySuicideKey))
-			Kill();
-
 		if (!isAlive) {
 			respawnTimer += Time.deltaTime;
 			
-			if (respawnTimer >= timeToRespawn && Input.anyKey)
+			if (respawnTimer >= timeToRespawn && _controls.Player.Any.ReadValue<float>() > 0)
 				SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		}
 
@@ -82,5 +86,17 @@ public class Health : MonoBehaviour {
 		);
 		cameraObject.AddComponent<Rigidbody>();
 		cameraObject.transform.parent = null;
+	}
+
+	private void SuicideCallback(InputAction.CallbackContext context) {
+		Kill();
+	}
+
+	private void OnEnable() {
+		_controls.Enable();
+	}
+
+	private void OnDisable() {
+		_controls.Disable();
 	}
 }

@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 
 public class MouseLook : MonoBehaviour {
-	private new Camera camera;
+	private Controls _controls;
+
+	private Camera _camera;
 	private Health health;
 
 	[Header("General")]
@@ -26,9 +28,13 @@ public class MouseLook : MonoBehaviour {
 	public bool lockMouse;
 	public bool showMouse;
 	
+	private void Awake() {
+		_controls = new Controls();
+	}
+
 	private void Start() {
-		camera = Camera.main;
-		_defaultFOV = camera.fieldOfView;
+		_camera = Camera.main;
+		_defaultFOV = _camera.fieldOfView;
 		health = GetComponent<Health>();
 	}
 
@@ -36,12 +42,10 @@ public class MouseLook : MonoBehaviour {
 		if (!lockMouse && health.IsAlive())
 			Mouse();
 		
-		if (Input.GetKeyDown(KeyCode.P)) showMouse = !showMouse;
-
-		if (Input.GetMouseButton(2))
-			camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, zoomingFOV, zoomSpeed * Time.deltaTime);
+		if (_controls.Player.Zoom.ReadValue<float>() > 0.1f)
+			_camera.fieldOfView = Mathf.Lerp(_camera.fieldOfView, zoomingFOV, zoomSpeed * Time.deltaTime);
 		else
-			camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, _defaultFOV, zoomSpeed * Time.deltaTime);
+			_camera.fieldOfView = Mathf.Lerp(_camera.fieldOfView, _defaultFOV, zoomSpeed * Time.deltaTime);
 
 		if (showMouse){
 			Cursor.visible = true;
@@ -55,12 +59,21 @@ public class MouseLook : MonoBehaviour {
 	}
 
 	public void Mouse() {
-		float mouseX = Input.GetAxis(mouseXAxis) * mouseSensitivity;
+		// FIXME: Doesn't work well
+		float mouseX = _controls.Player.Look.ReadValue<Vector2>().x * mouseSensitivity;
 
-		mouseYRotation += Input.GetAxis(mouseYAxis) * mouseSensitivity;
+		mouseYRotation += _controls.Player.Look.ReadValue<Vector2>().y * mouseSensitivity;
 		mouseYRotation = Mathf.Clamp(mouseYRotation, minYRotation, maxYRotation);
 
-		camera.transform.localEulerAngles = new Vector3(-mouseYRotation, 0, 0);
+		_camera.transform.localEulerAngles = new Vector3(-mouseYRotation, 0, 0);
 		transform.Rotate(0, mouseX, 0);
+	}
+
+	private void OnEnable() {
+		_controls.Enable();
+	}
+
+	private void OnDisable() {
+		_controls.Disable();
 	}
 }

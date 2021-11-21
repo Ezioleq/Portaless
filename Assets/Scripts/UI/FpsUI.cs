@@ -1,18 +1,23 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using TMPro;
 
 public class FpsUI : MonoBehaviour {
+	private Controls _controls;
+
 	[SerializeField] private TextMeshProUGUI _fpsCounterText;
 	// Defines how often fps will be updated on HUD
 	[SerializeField] private float _fpsRefreshRate = 1f;
 	private float _fpsCounter;
 	private float _timer;
 
-	[SerializeField] private KeyCode _toggleKey = KeyCode.F3;
 	private string _showFpsStateKey = "show_fps";
  
 	private void Awake() {
+		_controls = new Controls();
+		_controls.Player.FPSToggle.performed += (InputAction.CallbackContext context) => ToggleFPS();
+
 		// Allow only one instance by destroying another ones
 		DontDestroyOnLoad(this.gameObject);
 		if (FindObjectsOfType(GetType()).Length > 1)
@@ -22,9 +27,6 @@ public class FpsUI : MonoBehaviour {
 	}
 
 	private void Update() {
-		if (Input.GetKeyDown(_toggleKey))
-			ToggleFPS();
-
 		if (Time.time > _timer) {
 			_fpsCounter = (int)(1f / Time.unscaledDeltaTime);
 			_fpsCounterText.text = _fpsCounter.ToString() + " FPS";
@@ -32,7 +34,7 @@ public class FpsUI : MonoBehaviour {
 		}
 	}
 
-	private void ToggleFPS() {
+	public void ToggleFPS() {
 		SaveState();
 		LoadState();
 	}
@@ -48,5 +50,13 @@ public class FpsUI : MonoBehaviour {
 		_fpsCounterText.gameObject.SetActive(
 			Convert.ToBoolean(PlayerPrefs.GetInt(_showFpsStateKey, 0))
 		);
+	}
+
+	private void OnEnable() {
+		_controls.Enable();
+	}
+
+	private void OnDisable() {
+		_controls.Disable();
 	}
 }

@@ -1,8 +1,13 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class CharacterMotor : MonoBehaviour {
+	private Controls _controls;
+	private float _horizontalAxis;
+	private float _verticalAxis;
+
 	private CharacterController cc;
 	private Vector3 moveDirection = Vector3.zero;
 	private Vector3 playerVelocity = Vector3.zero;
@@ -11,8 +16,6 @@ public class CharacterMotor : MonoBehaviour {
 	[SerializeField] private bool noclip;
 	
 	[Header("General")]
-	public string verticalAxis = "Vertical";
-	public string horizontalAxis = "Horizontal";
 	public float walkSpeed = 4f;
 	public float runSpeed = 6.5f;
 	public float midairSpeed = 3;
@@ -21,12 +24,20 @@ public class CharacterMotor : MonoBehaviour {
 	public float maxAirSpeed = 3;
 	public float maxWalkSpeed = 20;
 	public float maxRunSpeed = 30;
+	private bool _isRunning = false;
 	public float drag = 0;
 	public float jumpForce = 5;
 	float adhesionForce = 0.4f;
 	public bool lockKeyboard;
 	float groundTimer;
 	private int layerMask;
+
+	private void Awake() {
+		_controls = new Controls();
+		_controls.Player.Noclip.performed += (InputAction.CallbackContext ctx) => {
+			noclip = !noclip;
+		};
+	}
 
 	private void Start() {
 		cc = gameObject.GetComponent<CharacterController>();
@@ -40,13 +51,10 @@ public class CharacterMotor : MonoBehaviour {
 		
 		if (!noclip)
 			cc.Move(playerVelocity * Time.deltaTime);
-
-		if (Input.GetKeyDown(KeyCode.V))
-			noclip = !noclip;
 	}
 
 	private void FixedUpdate() {
-		groundSpeed = Input.GetKey(KeyCode.LeftShift) ? maxWalkSpeed : maxRunSpeed;
+		groundSpeed = _controls.Player.Sprint.ReadValue<float>() > 0 ? maxWalkSpeed : maxRunSpeed;
 		// maxSpeed differs on the ground and in the air
 		maxSpeed = cc.isGrounded ? groundSpeed : maxAirSpeed;
 		
@@ -58,13 +66,7 @@ public class CharacterMotor : MonoBehaviour {
 		
 		if (groundTimer > 0.08f) {
 			// on the ground use GroundAccelerate (friction)
-			if (!Input.GetMouseButton(0))
-				playerVelocity = GroundAccelerate(playerVelocity, moveDirection, moveSpeed);
-
-			if (Input.GetMouseButton(0)) {
-				playerVelocity = AirAccelerate(playerVelocity, moveDirection, midairSpeed);
-				playerVelocity.y -= gravityForce * Time.deltaTime;
-			}
+			playerVelocity = GroundAccelerate(playerVelocity, moveDirection, moveSpeed);
 		} else {
 			// in the air use AirAccelerate (no friction)
 			playerVelocity = AirAccelerate(playerVelocity, moveDirection, midairSpeed);
@@ -74,17 +76,21 @@ public class CharacterMotor : MonoBehaviour {
 	}
 
 	public void Keyboard() {
+		_isRunning = _controls.Player.Sprint.ReadValue<float>() > 0;
+		_horizontalAxis = _controls.Player.Movement.ReadValue<Vector2>().x;
+		_verticalAxis = _controls.Player.Movement.ReadValue<Vector2>().y;
+
 		// calculate moveDirection 
 		moveDirection = (
-			Input.GetAxisRaw(horizontalAxis) * transform.right +
-			Input.GetAxisRaw(verticalAxis) * transform.forward
+			_horizontalAxis * transform.right +
+			_verticalAxis * transform.forward
 		).normalized;
-		moveSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+		moveSpeed = _isRunning ? runSpeed : walkSpeed;
 
 		if (!noclip) {
 			GetComponent<CharacterController>().enabled = true;
 			if (cc.isGrounded) {
-				if (Input.GetButton("Jump")) {
+				if (_controls.Player.Jump.ReadValue<float>() > 0) {
 					playerVelocity.y = Mathf.Clamp(playerVelocity.y, 0, Mathf.Infinity);
 					playerVelocity.y += jumpForce;
 				}		
@@ -92,13 +98,13 @@ public class CharacterMotor : MonoBehaviour {
 			
 		} else {
 			GetComponent<CharacterController>().enabled = false;
-			transform.Translate(0, 0, Input.GetAxis(verticalAxis) * moveSpeed * Time.deltaTime, Space.Self);
-			transform.Translate(Input.GetAxis(horizontalAxis) * moveSpeed * Time.deltaTime, 0, 0, Space.Self);
+			transform.Translate(0, 0, _verticalAxis * moveSpeed * Time.deltaTime, Space.Self);
+			transform.Translate(_horizontalAxis * moveSpeed * Time.deltaTime, 0, 0, Space.Self);
 
-			if (Input.GetButton("Jump"))
+			if (_isRunning)
 				transform.Translate(0, moveSpeed * Time.deltaTime, 0, Space.World);
 
-			if (Input.GetKey(KeyCode.LeftControl))
+			if (_controls.Player.Crouch.ReadValue<float>() > 0)
 				transform.Translate(0, -moveSpeed * Time.deltaTime, 0, Space.World);
 		}
 	}
@@ -155,5 +161,13 @@ public class CharacterMotor : MonoBehaviour {
 
 	public void AddMomentum(Vector3 momentum) {
 		playerVelocity += momentum;
+	}
+
+	private void OnEnable() {
+		_controls.Enable();
+	}
+
+	private void OnDisable() {
+		_controls.Disable();
 	}
 }

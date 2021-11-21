@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 4930947828918908567}
   - component: {fileID: 4930947828918908564}
   - component: {fileID: 4930947828918908563}
-  - component: {fileID: 4930947828918908562}
   - component: {fileID: 4930947828918908561}
+  - component: {fileID: 575723059}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -29,7 +29,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4930947828918908568}
-  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0.0000029504295}
+  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
   m_LocalPosition: {x: 0, y: 1, z: 10.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -51,7 +51,7 @@ CharacterController:
   m_Height: 1.8
   m_Radius: 0.4
   m_SlopeLimit: 45
-  m_StepOffset: 0.3
+  m_StepOffset: 0.4
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
@@ -68,11 +68,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   noclip: 0
-  verticalAxis: Vertical
-  horizontalAxis: Horizontal
-  walkSpeed: 6
-  runSpeed: 8
-  midairSpeed: 5
+  walkSpeed: 50
+  runSpeed: 100
+  midairSpeed: 20
+  maxAirSpeed: 3
+  maxWalkSpeed: 10
+  maxRunSpeed: 14
+  drag: 0.2
   jumpForce: 6
   lockKeyboard: 0
 --- !u!114 &4930947828918908564
@@ -90,7 +92,7 @@ MonoBehaviour:
   mouseYAxis: Mouse Y
   mouseXAxis: Mouse X
   mouseYRotation: 0
-  mouseSensitivity: 4.5
+  mouseSensitivity: 2.5
   maxYRotation: 90
   minYRotation: -90
   zoomingFOV: 30
@@ -113,26 +115,11 @@ MonoBehaviour:
   layerMask:
     serializedVersion: 2
     m_Bits: 1
-  grabKey: 101
   maxDistance: 3
   lerpSpeed: 10
   rotationSpeed: 10
   minLocalHeight: -0.4
   _grabbedObject: {fileID: 0}
---- !u!114 &4930947828918908562
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4930947828918908568}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2e1526d776e5573ba748d0904e6c679, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  shotKey: 283
-  superSize: 4
 --- !u!114 &4930947828918908561
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -148,10 +135,67 @@ MonoBehaviour:
   maxHealth: 100
   regenRate: 20
   minTimeAfterHit: 2
-  emergencySuicideKey: 114
   timeToRespawn: 2.5
   health: 100
   hurtSprite: {fileID: 0}
+--- !u!114 &575723059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4930947828918908568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Actions: {fileID: -944628639613478452, guid: 16f7261ed935807eca873858acef1677, type: 3}
+  m_NotificationBehavior: 0
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 692a452b-386a-4262-9e4c-2f7ddf5eb01b
+    m_ActionName: Player/Movement[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 023ffcb6-7466-455a-ba0b-a7bd41302d85
+    m_ActionName: Player/Look[/Mouse/delta]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: f4807713-13ea-4d92-b594-fc9898496474
+    m_ActionName: Player/Zoom[/Gamepad/rightTrigger,/Mouse/middleButton]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: b9c9532a-44e1-4c34-9bbf-c35888b3a02b
+    m_ActionName: Player/Interact[/Gamepad/buttonWest,/Keyboard/e]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 9541e18f-3b66-4410-85e6-88f2bbae1538
+    m_ActionName: Player/Sprint[/Gamepad/leftStickPress,/Keyboard/leftShift]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 5f90a3d0-58c8-47ab-9657-4b018e049a81
+    m_ActionName: Player/FPSToggle[/Keyboard/f3]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 78beb213-6b3c-49f0-99dc-7f07ba3ed36b
+    m_ActionName: Player/Suicide[/Gamepad/start,/Keyboard/r]
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Player
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
 --- !u!1 &4930947829104742656
 GameObject:
   m_ObjectHideFlags: 0
@@ -225,8 +269,8 @@ Camera:
   m_GameObject: {fileID: 4930947829643398709}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
